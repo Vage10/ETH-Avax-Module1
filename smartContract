@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.26;
+
+contract Error {
+     uint public n;
+
+    function checkAssert(uint n) public view {
+        assert(n == 0);
+    }
+    function checkRequire(uint num) public pure {
+        require(num > 10, "Input must be greater 10");
+    }
+
+    function checkRevert(uint num) public pure {
+        if (num <= 10) {
+            revert("Input must be greater than 10");
+        }
+    } 
+}
