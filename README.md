@@ -79,18 +79,23 @@ Example
 Here is an example of how to use the ClassRecords contract:
 
 // Deploy the contract (teacher's address will be the deployer)
+
 ClassRecords classRecords = new ClassRecords();
 
 // Add a student (only the teacher can do this)
+
 classRecords.addStudent(0xStudentAddress, "John Doe");
 
 // Record a grade for the student (only the teacher can do this)
+
 classRecords.recordGrade(0xStudentAddress, "Math", 95);
 
 // Get the student's grade for a specific course
+
 uint8 grade = classRecords.getGrade(0xStudentAddress, "Math");
 
 // Get the student's name
+
 string memory name = classRecords.getStudentName(0xStudentAddress);
 Notes
 The contract restricts certain functions to only be callable by the teacher using the onlyTeacher modifier.
@@ -99,4 +104,5 @@ The revertIfNotTeacher and assertStudentsExist functions demonstrate the use of 
 This contract is a practical example of how blockchain technology can be used to manage educational records in a transparent and secure manner.
 
 Author:
+
 Vageshwari Chaudhary
