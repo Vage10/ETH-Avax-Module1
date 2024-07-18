@@ -1,14 +1,102 @@
-# ETH-Avax-Module1
-Creating a smart contract that implements the require(), assert() and revert() statements.
+ClassRecords Smart Contract
+Overview
+The ClassRecords smart contract is designed to manage student records in a decentralized manner. It allows a designated teacher to add students, record grades, and retrieve the grades and names of students. The contract utilizes Solidity's error handling mechanisms (require(), assert(), and revert()) to ensure proper execution and state management.
 
-Description
-There are three methods that constitute the error-handling process in Solidity:
+Features
+Add Student: Allows the teacher to add students to the class.
+Record Grade: Allows the teacher to record grades for students.
+Get Grade: Allows anyone to retrieve the grade of a student for a specific course.
+Get Student Name: Allows anyone to retrieve the name of a student.
+Revert and Assert Functions: Demonstrates the use of revert() and assert() statements.
+Smart Contract Details
 
-require(): Used to validate certain conditions before further execution of a function. It takes two parameters as an input. However, if the condition fails, then the function execution is terminated and the message (the second parameter) is displayed in the logs. The second parameter, however, is optional. require() will work even if you pass only parameter, that is, the condition to be checked. The require() statement is defined as follows: require( , );
+Structs
+Student: Represents a student with their name, existence flag, and a mapping of course names to grades.
 
-assert(): The assert function, like require, is a convenience function that checks for conditions. If a condition fails, then the function execution is terminated with an error message. assert(<condition to be checked/validated>);
+State Variables
+teacher: Stores the address of the teacher.
+students: Maps student addresses to their Student struct.
+studentAddresses: Stores the list of student addresses.
 
-revert(): Can be used to flag an error and revert the current call. You can also provide a message containing details about the error, and the message will be passed back to the caller. However, the message, like in require(), is an optional parameter. revert() causes the EVM to revert all the changes made to the state, and things return to the initial state or the state before the function call was made. The reason for reverting is that there is no safe way to continue execution because something unexpected happened. This is important as it helps in saving gas.
+Events
+StudentAdded: Emitted when a student is added.
+GradeRecorded: Emitted when a grade is recorded for a student.
 
-Executing program
-First Write the code once you have completed the code Compile it and check if there is any error or not if present resolve the error or you can take help from my code too . After Compilation Deploy it and pass the values in function Check Each Funtion's output .
+Modifiers
+onlyTeacher: Restricts function access to the teacher.
+studentExists: Ensures that the student exists before executing the function.
+
+Constructor
+Sets the teacher to the address that deploys the contract.
+
+Functions
+addStudent(address studentAddress, string memory name)
+
+Adds a new student.
+Only the teacher can call this function.
+Emits the StudentAdded event.
+recordGrade(address studentAddress, string memory course, uint8 grade)
+
+Records a grade for a student.
+Only the teacher can call this function.
+The student must exist.
+The grade must be between 0 and 100.
+Emits the GradeRecorded event.
+getGrade(address studentAddress, string memory course) public view returns (uint8)
+
+Retrieves the grade of a student for a specific course.
+The student must exist.
+getStudentName(address studentAddress) public view returns (string memory)
+
+Retrieves the name of a student.
+The student must exist.
+revertIfNotTeacher() public view
+
+Demonstrates the use of revert().
+Reverts if the caller is not the teacher.
+assertStudentsExist() public view
+
+Demonstrates the use of assert().
+Asserts that there are students in the class.
+Usage
+Deploy the Contract
+
+Deploy the ClassRecords contract. The deployer address becomes the teacher.
+
+Add Students
+
+The teacher can add students using the addStudent function, specifying the student's address and name.
+
+Record Grades
+
+The teacher can record grades for students using the recordGrade function, specifying the student's address, course name, and grade.
+
+Retrieve Information
+
+Anyone can retrieve a student's grade using the getGrade function or their name using the getStudentName function.
+
+Example
+Here is an example of how to use the ClassRecords contract:
+
+// Deploy the contract (teacher's address will be the deployer)
+ClassRecords classRecords = new ClassRecords();
+
+// Add a student (only the teacher can do this)
+classRecords.addStudent(0xStudentAddress, "John Doe");
+
+// Record a grade for the student (only the teacher can do this)
+classRecords.recordGrade(0xStudentAddress, "Math", 95);
+
+// Get the student's grade for a specific course
+uint8 grade = classRecords.getGrade(0xStudentAddress, "Math");
+
+// Get the student's name
+string memory name = classRecords.getStudentName(0xStudentAddress);
+Notes
+The contract restricts certain functions to only be callable by the teacher using the onlyTeacher modifier.
+The studentExists modifier ensures that functions interacting with students only operate on existing students.
+The revertIfNotTeacher and assertStudentsExist functions demonstrate the use of revert() and assert() statements for educational purposes.
+This contract is a practical example of how blockchain technology can be used to manage educational records in a transparent and secure manner.
+
+Author:
+Vageshwari Chaudhary
