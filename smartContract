@@ -1,19 +1,75 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.0;
 
-contract Error {
-     uint public n;
-
-    function checkAssert(uint n) public view {
-        assert(n == 0);
-    }
-    function checkRequire(uint num) public pure {
-        require(num > 10, "Input must be greater 10");
+contract ClassRecords {
+    struct Student {
+        string name;
+        bool exists;
+        mapping(string => uint8) grades; // mapping of course names to grades
     }
 
-    function checkRevert(uint num) public pure {
-        if (num <= 10) {
-            revert("Input must be greater than 10");
+    address public teacher;
+    mapping(address => Student) public students;
+    address[] public studentAddresses;
+
+    event StudentAdded(address studentAddress, string name);
+    event GradeRecorded(address studentAddress, string course, uint8 grade);
+
+    modifier onlyTeacher() {
+        require(msg.sender == teacher, "Only the teacher can perform this action");
+        _;
+    }
+
+    modifier studentExists(address studentAddress) {
+        require(students[studentAddress].exists, "Student does not exist");
+        _;
+    }
+
+    constructor() {
+        teacher = msg.sender;
+    }
+
+    // Function to add a student
+    function addStudent(address studentAddress, string memory name) public onlyTeacher {
+        require(!students[studentAddress].exists, "Student already exists");
+
+        Student storage student = students[studentAddress];
+        student.name = name;
+        student.exists = true;
+        studentAddresses.push(studentAddress);
+
+        emit StudentAdded(studentAddress, name);
+    }
+
+    // Function to record a grade for a student
+    function recordGrade(address studentAddress, string memory course, uint8 grade) public onlyTeacher studentExists(studentAddress) {
+        require(grade <= 100, "Grade must be between 0 and 100");
+
+        students[studentAddress].grades[course] = grade;
+
+        emit GradeRecorded(studentAddress, course, grade);
+    }
+
+    // Function to get a student's grade for a specific course
+    function getGrade(address studentAddress, string memory course) public view studentExists(studentAddress) returns (uint8) {
+        uint8 grade = students[studentAddress].grades[course];
+        return grade;
+    }
+
+    // Function to get a student's name
+    function getStudentName(address studentAddress) public view studentExists(studentAddress) returns (string memory) {
+        return students[studentAddress].name;
+    }
+
+    // Function to demonstrate the use of revert()
+    function revertIfNotTeacher() public view {
+        if (msg.sender != teacher) {
+            revert("You are not the teacher");
         }
-    } 
+    }
+
+    // Function to demonstrate the use of assert()
+    function assertStudentsExist() public view {
+        assert(studentAddresses.length > 0);
+    }
 }
