@@ -1,75 +1,102 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
-contract ClassRecords {
-    struct Student {
+contract EventRegistration {
+    string public eventName;
+    address public organizer;
+    uint public maxParticipants;
+    uint public registrationCount;
+    bool public registrationOpen;
+
+    struct Participant {
         string name;
-        bool exists;
-        mapping(string => uint8) grades; // mapping of course names to grades
+        string email;
+        bool registered;
     }
 
-    address public teacher;
-    mapping(address => Student) public students;
-    address[] public studentAddresses;
+    mapping(address => Participant) public participants;
+    address[] public participantAddresses;  // Array to track participant addresses
 
-    event StudentAdded(address studentAddress, string name);
-    event GradeRecorded(address studentAddress, string course, uint8 grade);
+    // Events
+    event RegistrationOpened(uint maxParticipants);
+    event RegistrationClosed();
+    event ParticipantRegistered(address indexed participant, string name);
+    event ParticipantRemoved(address indexed participant);
+    
+    constructor(string memory _eventName, uint _maxParticipants) {
+        organizer = msg.sender;
+        eventName = _eventName;
+        maxParticipants = _maxParticipants;
+        registrationCount = 0;
+        registrationOpen = false;
+    }
 
-    modifier onlyTeacher() {
-        require(msg.sender == teacher, "Only the teacher can perform this action");
+    modifier onlyOrganizer() {
+        require(msg.sender == organizer, "Only the organizer can call this function");
         _;
     }
 
-    modifier studentExists(address studentAddress) {
-        require(students[studentAddress].exists, "Student does not exist");
+    modifier onlyWhenOpen() {
+        require(registrationOpen, "Registration is not open");
         _;
     }
 
-    constructor() {
-        teacher = msg.sender;
+    modifier onlyWhenClosed() {
+        require(!registrationOpen, "Registration is still open");
+        _;
     }
 
-    // Function to add a student
-    function addStudent(address studentAddress, string memory name) public onlyTeacher {
-        require(!students[studentAddress].exists, "Student already exists");
-
-        Student storage student = students[studentAddress];
-        student.name = name;
-        student.exists = true;
-        studentAddresses.push(studentAddress);
-
-        emit StudentAdded(studentAddress, name);
+    function openRegistration() public onlyOrganizer onlyWhenClosed {
+        registrationOpen = true;
+        emit RegistrationOpened(maxParticipants);
     }
 
-    // Function to record a grade for a student
-    function recordGrade(address studentAddress, string memory course, uint8 grade) public onlyTeacher studentExists(studentAddress) {
-        require(grade <= 100, "Grade must be between 0 and 100");
-
-        students[studentAddress].grades[course] = grade;
-
-        emit GradeRecorded(studentAddress, course, grade);
+    function closeRegistration() public onlyOrganizer onlyWhenOpen {
+        registrationOpen = false;
+        emit RegistrationClosed();
     }
 
-    // Function to get a student's grade for a specific course
-    function getGrade(address studentAddress, string memory course) public view studentExists(studentAddress) returns (uint8) {
-        uint8 grade = students[studentAddress].grades[course];
-        return grade;
+    function register(string memory _name, string memory _email) public onlyWhenOpen {
+        require(!participants[msg.sender].registered, "Already registered");
+        require(registrationCount < maxParticipants, "Event is fully booked");
+
+        participants[msg.sender] = Participant(_name, _email, true);
+        participantAddresses.push(msg.sender);  // Add participant address to the array
+        registrationCount++;
+        emit ParticipantRegistered(msg.sender, _name);
     }
 
-    // Function to get a student's name
-    function getStudentName(address studentAddress) public view studentExists(studentAddress) returns (string memory) {
-        return students[studentAddress].name;
-    }
+    function removeParticipant(address _participant) public onlyOrganizer onlyWhenClosed {
+        require(participants[_participant].registered, "Participant not registered");
 
-    // Function to demonstrate the use of revert()
-    function revertIfNotTeacher() public view {
-        if (msg.sender != teacher) {
-            revert("You are not the teacher");
+        // Find and remove participant from the array
+        for (uint i = 0; i < participantAddresses.length; i++) {
+            if (participantAddresses[i] == _participant) {
+                participantAddresses[i] = participantAddresses[participantAddresses.length - 1];
+                participantAddresses.pop();
+                break;
+            }
         }
+
+        delete participants[_participant];
+        registrationCount--;
+        emit ParticipantRemoved(_participant);
     }
 
-    // Function to demonstrate the use of assert()
-    function assertStudentsExist() public view {
-        assert(studentAddresses.length > 0);
+    function getParticipant(address _participant) public view returns (string memory name, string memory email) {
+        require(participants[_participant].registered, "Participant not registered");
+        Participant memory participant = participants[_participant];
+        return (participant.name, participant.email);
+    }
+
+    function getAllParticipants() public view onlyOrganizer returns (Participant[] memory) {
+        Participant[] memory allParticipants = new Participant[](registrationCount);
+        for (uint i = 0; i < participantAddresses.length; i++) {
+            address participantAddress = participantAddresses[i];
+            if (participants[participantAddress].registered) {
+                allParticipants[i] = participants[participantAddress];
+            }
+        }
+        return allParticipants;
     }
 }
